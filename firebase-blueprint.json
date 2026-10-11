@@ -1,0 +1,123 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile containing display name, avatar, and personal preferences",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID of the user"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the user",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user",
+          "maxLength": 150
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL or base64 data URI of the user avatar picture",
+          "maxLength": 1000000
+        },
+        "plan": {
+          "type": "string",
+          "description": "Subscription tier of the user (e.g. Luna Plus)",
+          "maxLength": 50
+        },
+        "customInstructions": {
+          "type": "string",
+          "description": "Custom system instructions for AI personalization",
+          "maxLength": 2000
+        },
+        "aboutUser": {
+          "type": "string",
+          "description": "User role or bio",
+          "maxLength": 1000
+        },
+        "theme": {
+          "type": "string",
+          "description": "UI theme preference",
+          "enum": ["dark", "light"]
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "description": "Whether sound effects are enabled"
+        },
+        "searchGroundingDefault": {
+          "type": "boolean",
+          "description": "Whether Google Search grounding is enabled by default"
+        },
+        "voiceGender": {
+          "type": "string",
+          "description": "Preferred voice for live audio synthesis",
+          "enum": ["female", "male"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp or server time of last profile update"
+        }
+      },
+      "required": ["userId", "name"]
+    },
+    "ChatThread": {
+      "title": "ChatThread",
+      "description": "A conversation thread containing metadata and messages",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique thread identifier"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner UID of the conversation"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the chat thread",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp in ms when thread was created"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp in ms when thread was last modified"
+        },
+        "isPinned": {
+          "type": "boolean",
+          "description": "Whether thread is pinned to top of chat history"
+        },
+        "modelId": {
+          "type": "string",
+          "description": "Selected model ID for this chat"
+        },
+        "category": {
+          "type": "string",
+          "description": "Temporal category (e.g. Today, Yesterday, Previous 7 Days, Older)"
+        },
+        "messages": {
+          "type": "array",
+          "description": "Array of messages in this thread"
+        }
+      },
+      "required": ["id", "userId", "title", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user profile and account preferences"
+    },
+    "/threads/{threadId}": {
+      "schema": "ChatThread",
+      "description": "Stores user chat history threads and conversations"
+    }
+  }
+}

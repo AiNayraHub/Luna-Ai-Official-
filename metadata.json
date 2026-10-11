@@ -1,0 +1,6 @@
+{
+  "name": "Luna AI Official",
+  "description": "Luna AI Official - Clean, intelligent conversational AI assistant with multi-model intelligence, Google cloud sync, and voice mode.",
+  "requestFramePermissions": ["microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

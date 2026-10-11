@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global security primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Validation
+    function isValidUserProfile(data) {
+      return data.userId is string &&
+        data.userId == request.auth.uid &&
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 100 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+        (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 1000000)) &&
+        (!('plan' in data) || (data.plan is string && data.plan.size() <= 50)) &&
+        (!('customInstructions' in data) || (data.customInstructions is string && data.customInstructions.size() <= 2000)) &&
+        (!('aboutUser' in data) || (data.aboutUser is string && data.aboutUser.size() <= 1000)) &&
+        (!('theme' in data) || data.theme in ['dark', 'light']) &&
+        (!('soundEnabled' in data) || data.soundEnabled is bool) &&
+        (!('searchGroundingDefault' in data) || data.searchGroundingDefault is bool) &&
+        (!('voiceGender' in data) || data.voiceGender in ['female', 'male']);
+    }
+
+    // Chat Thread Validation
+    function isValidChatThread(data) {
+      return data.id is string &&
+        data.id.size() > 0 &&
+        data.id.size() <= 128 &&
+        data.userId is string &&
+        data.userId == request.auth.uid &&
+        data.title is string &&
+        data.title.size() <= 200 &&
+        data.createdAt is number &&
+        data.updatedAt is number &&
+        (!('isPinned' in data) || data.isPinned is bool) &&
+        (!('modelId' in data) || (data.modelId is string && data.modelId.size() <= 100)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+        (!('messages' in data) || (data.messages is list && data.messages.size() <= 200));
+    }
+
+    // Match /users/{userId}
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if false; // Users cannot list other user profiles
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUserProfile(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidUserProfile(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Match /threads/{threadId}
+    match /threads/{threadId} {
+      allow get: if isSignedIn() && isValidId(threadId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(threadId) && incoming().userId == request.auth.uid && isValidChatThread(incoming());
+      allow update: if isSignedIn() && isValidId(threadId) && existing().userId == request.auth.uid && incoming().userId == request.auth.uid && isValidChatThread(incoming());
+      allow delete: if isSignedIn() && isValidId(threadId) && (resource == null || resource.data.userId == request.auth.uid);
+    }
+  }
+}
